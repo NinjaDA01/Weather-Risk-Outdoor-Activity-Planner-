@@ -8,7 +8,7 @@ from google.genai import errors, types
 class AIExplainer:
 
     def __init__(self):
-        # Load the secret API key
+    
         load_dotenv()
 
         api_key = os.getenv("GEMINI_API_KEY")
@@ -17,7 +17,7 @@ class AIExplainer:
             "GEMINI_MODEL", "gemini-3.5-flash-lite"
         )
 
-        # Create the Gemini connection
+   
         self.client = None
 
         if api_key:
