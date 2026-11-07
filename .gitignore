@@ -1,0 +1,125 @@
+# ==========================================
+# PYTHON CACHE AND COMPILED FILES
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# ==========================================
+# VIRTUAL ENVIRONMENTS
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# ENVIRONMENT VARIABLES AND SECRET FILES
+# ==========================================
+.env
+.env.*
+!.env.example
+.envrc
+
+# ==========================================
+# PYTHON PACKAGING AND DISTRIBUTION
+# ==========================================
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg
+*.egg-info/
+wheels/
+share/python-wheels/
+develop-eggs/
+parts/
+sdist/
+lib/
+lib64/
+MANIFEST
+.installed.cfg
+
+# ==========================================
+# INSTALLER LOGS
+# ==========================================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# TESTING AND COVERAGE REPORTS
+# ==========================================
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+nosetests.xml
+.hypothesis/
+.cache/
+cover/
+
+# ==========================================
+# LOG AND TEMPORARY FILES
+# ==========================================
+*.log
+*.tmp
+*.bak
+tempCodeRunnerFile.py
+
+# ==========================================
+# DATABASE TEMPORARY FILES
+# ==========================================
+*.sqlite-journal
+*.db-journal
+
+# ==========================================
+# EDITOR AND IDE SETTINGS
+# ==========================================
+.vscode/
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+
+# ==========================================
+# OPERATING SYSTEM FILES
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# PYTHON DEVELOPMENT TOOLS
+# ==========================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+cython_debug/
+
+# ==========================================
+# JUPYTER NOTEBOOK FILES
+# ==========================================
+.ipynb_checkpoints/
+
+# ==========================================
+# PYTHON FRAMEWORK AND TOOL FILES
+# ==========================================
+.instance/
+.webassets-cache/
+.scrapy/
+.pybuilder/
+target/
+__pypackages__/
