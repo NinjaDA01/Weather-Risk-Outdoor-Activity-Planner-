@@ -1,0 +1,16 @@
+import tkinter as tk
+
+class WeatherView(tk.LabelFrame):
+    def __init__(self, parent):
+        super().__init__(parent, text="2. Weather Information", font=("Arial", 10, "bold"), bg="white", padx=15, pady=10)
+        self.text = tk.Text(self, height=15, width=35, font=("Arial", 10), bg="#f9fbfd", relief="flat")
+        self.text.pack(fill="both", expand=True)
+        self.text.insert("1.0", "Weather info will appear here")
+        self.text.config(state="disabled")
+
+    def display_weather(self, data):
+        self.text.config(state="normal")
+        self.text.delete("1.0", tk.END)
+        info = f"Location: {data.get('location')}\nTemp: {data.get('temp')}\nCondition: {data.get('condition')}\nHumidity: {data.get('humidity')}\nWind: {data.get('wind')}"
+        self.text.insert("1.0", info)
+        self.text.config(state="disabled")
