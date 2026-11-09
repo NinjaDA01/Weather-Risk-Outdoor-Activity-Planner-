@@ -11,7 +11,12 @@ class ActivityView(tk.LabelFrame):
     def display_recommendation(self, result):
         self.text.config(state="normal")
         self.text.delete("1.0", tk.END)
-        packing = "\n".join([f"- {i}" for i in result.get('packing', [])])
+        packing_items = result.get("packing", [])
+
+if isinstance(packing_items, list):
+    packing = "\n".join(f"- {item}" for item in packing_items)
+else:
+    packing = str(packing_items)
         info = f"RISK: {result.get('risk')}\n\nBEST TIME: {result.get('best_time')}\n\nEXPLANATION: {result.get('explanation')}\n\nSAFETY: {result.get('safety')}\n\nPACKING:\n{packing}"
         self.text.insert("1.0", info)
         self.text.config(state="disabled")
