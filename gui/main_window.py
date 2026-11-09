@@ -3,20 +3,18 @@ from tkinter import ttk, messagebox
 import sys, os
 
 # This lets us use main.py from your teammates
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 
 from gui.weather_view import WeatherView
 from gui.activity_view import ActivityView
 
-# Try to import main.py
-try:
-    import main as backend
-except:
-    backend = None
+
 
 class MainWindow:
-    def __init__(self, root):
+    def __init__(self, root, on_assess=None, on_save=None):
         self.root = root
+        self.on_assess = on_assess
+        self.on_save = on_save
         self.root.title("Weather Activity Planner")
         self.root.geometry("900x650")
         self.root.config(bg="#f0f4f8")
@@ -36,19 +34,50 @@ class MainWindow:
         tk.Label(input_frame, text="Activity:", bg="white").grid(row=0, column=2, padx=(20,0))
         self.activity_var = tk.StringVar()
         self.activity_combo = ttk.Combobox(input_frame, textvariable=self.activity_var, width=15, state="readonly")
-        self.activity_combo['values'] = ("football", "jogging", "farming", "travelling", "picnics")
+        self.activity_combo['values'] = (
+          "football",
+          "jogging",
+          "farming",
+          "travelling",
+          "picnic"
+        )
+     
         self.activity_combo.current(0)
         self.activity_combo.grid(row=0, column=3, padx=10)
 
         # 3. BUTTONS
         btn_frame = tk.Frame(root, bg="#f0f4f8")
         btn_frame.pack(pady=10)
-        tk.Button(btn_frame, text="Check Weather", bg="#3498db", fg="white", command=self.check_weather, width=15).pack(side="left", padx=10)
-        tk.Button(btn_frame, text="Get Recommendation", bg="#27ae60", fg="white", command=self.get_recommendation, width=18).pack(side="left", padx=10)
+
+           tk.Button(
+              btn_frame,
+              text="Assess Activity",
+              b.g="#3498db",
+              fg="white",
+              command=self.request_assessment,
+              width=18
+            ).pack(side="left", padx=10)
+
+            tk.Button(
+               btn_frame,
+               text="Save Plan",
+               bg="#27ae60",
+               fg="white",
+               command=self.request_save,
+               width=15
+            ).pack(side="left", padx=10) 
 
         # 4. DISPLAY SECTIONS
         display_frame = tk.Frame(root, bg="#f0f4f8")
         display_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        self.status_label = tk.Label(
+            root,
+            text="Ready",
+            bg="#f0f4f8",
+            font=("Arial", 9)
+        )
+        
+self.status_label.pack(side="bottom", pady=5)
 
         self.weather_view = WeatherView(display_frame)
         self.weather_view.pack(side="left", fill="both", expand=True, padx=5)
@@ -56,6 +85,70 @@ class MainWindow:
         self.activity_view = ActivityView(display_frame)
         self.activity_view.pack(side="left", fill="both", expand=True, padx=5)
 
+class MainWindow:
+
+    def __init__(self, root, on_assess=None, on_save=None):
+
+        self.root = root
+        self.on_assess = on_assess
+        self.on_save = on_save
+
+        # Your existing GUI setup goes here
+
+        self.weather_view = WeatherView(display_frame)
+        self.activity_view = ActivityView(display_frame)
+
+    # ADD THE NEW METHODS HERE
+
+    def request_assessment(self):
+        location = self.location_entry.get().strip()
+        activity = self.activity_var.get().strip()
+
+        if self.on_assess:
+            self.on_assess(location, activity)
+
+    def request_save(self):
+        if self.on_save:
+            self.on_save()
+
+    def set_busy(self, busy, message=""):
+        self.status_label.config(text=message)
+
+    def set_status(self, message):
+        self.status_label.config(text=message)
+
+    def show_error(self, message):
+        messagebox.showerror("Weather Planner", message)
+
+    def display_results(self, result):
+        weather = result.get("weather", {})
+        risk = result.get("risk", {})
+        best_time = result.get("best_time", {})
+        checklist = result.get("checklist", {})
+
+        self.weather_view.display_weather(weather)
+
+        if isinstance(best_time, dict):
+            recommended_time = best_time.get(
+                "best_time", "Unavailable"
+            )
+        else:
+            recommended_time = str(best_time)
+
+        if isinstance(checklist, dict):
+            packing = checklist.get("essentials", [])
+        else:
+            packing = checklist if isinstance(checklist, list) else []
+
+        recommendation = {
+            "risk": risk.get("level", "Unknown"),
+            "best_time": recommended_time,
+            "explanation": result.get("explanation", ""),
+            "safety": "\n".join(risk.get("warnings", [])),
+            "packing": packing
+        }
+
+        self.activity_view.display_recommendation(recommendation)
     def check_weather(self):
         loc = self.location_entry.get()
         if not loc:
@@ -79,7 +172,3 @@ class MainWindow:
             demo = {"risk": "Low Risk", "best_time": "Morning 7-10 AM", "explanation": f"Good for {act} in {loc}", "safety": "Stay hydrated", "packing": ["Water", "Cap", "Sunscreen"]}
             self.activity_view.display_recommendation(demo)
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = MainWindow(root)
-    root.mainloop()
