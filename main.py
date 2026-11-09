@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from gui.main_window import MainWindow
-from models.forecast import Forecast
+
 from services.ai_explainer import AIExplainer
 from services.recommendation_engine import RecommendationEngine
 from services.risk_analyzer import ActivityRiskAnalyzer
@@ -132,11 +132,10 @@ class WeatherActivityPlannerApp:
             forecast = self.weather_client.get_weather(location)
             if forecast is None:
                 raise RuntimeError("The weather service returned no forecast.")
-            if not isinstance(forecast, Forecast):
-                raise TypeError(
-                    "WeatherClient.get_weather() must return a Forecast object. "
-                    "Ask the Weather API and Forecast Model members to align this interface."
-                )
+            if not isinstance(forecast, dict):
+    raise TypeError(
+        "WeatherClient.get_weather() must return forecast data as a dictionary."
+  )
 
             # 2. Apply deterministic, rule-based safety analysis.
             risk = self.risk_analyzer.assess_risk(forecast, activity)
