@@ -1,15 +1,16 @@
 """Main entry point for the Weather Risk & Outdoor Activity Planner.
 
 Integration contract used by this file:
-- WeatherClient.get_weather(location) returns a models.forecast.Forecast object.
+- WeatherClient.get_weather(location) returns a dictionary containing
+  the current weather and hourly forecast data.
 - ActivityRiskAnalyzer.assess_risk(forecast, activity) returns a dict with
   level, reasons and warnings. level is SAFE, MANAGEABLE, RISKY or AVOID.
-- RecommendationEngine.recommend_best_time(...) returns a value the GUI can
-  display (preferably a dict or a short string).
-- RecommendationEngine.generate_checklist(...) returns a list of checklist items.
+- RecommendationEngine.recommend_best_time(...) returns a dictionary
+  containing the recommended time and supporting information.
+- RecommendationEngine.generate_checklist(...) returns checklist data.
 - AIExplainer.explain_risk(weather, activity, risk) returns explanation text.
-- MainWindow accepts root, on_assess and on_save, and implements the view
-  methods documented in the project leader guide.
+- MainWindow accepts root, on_assess and on_save, and implements
+  the view methods documented in the project leader guide.
 """
 
 from __future__ import annotations
