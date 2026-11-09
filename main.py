@@ -222,35 +222,68 @@ class WeatherActivityPlannerApp:
             self.root.after(100, self.process_events)
 
     def save_search_history(self, result: dict[str, Any]) -> None:
-        """Append a successful assessment to the local search history."""
-        try:
-            history = self.storage.load_data("search_history.json")
-            if not isinstance(history, list):
-                history = []
-            history.append(result)
-            self.storage.save_data("search_history.json", history[-50:])
-        except Exception:
-            # Storage is useful, but a history-write problem should not hide results.
-            logger.exception("Could not update search history.")
-            self.view.set_status("Assessment complete, but search history could not be saved.")
+    """Append a successful assessment to the local search history."""
+
+    try:
+        history = self.storage.load_data("search_history.json")
+
+        if not isinstance(history, list):
+            history = []
+
+        history.append(result)
+
+        saved = self.storage.save_data(
+            "search_history.json",
+            history[-50:]
+        )
+
+        if not saved:
+            self.view.set_status(
+                "Assessment complete, but search history could not be saved."
+            )
+
+    except Exception:
+        logger.exception("Could not update search history.")
+
+        self.view.set_status(
+            "Assessment complete, but search history could not be saved."
+  )
 
     def save_latest_plan(self) -> None:
-        """Save the most recent assessment when the user selects Save Plan."""
-        if self.last_result is None:
-            self.view.show_error("There is no completed assessment to save yet.")
-            return
+    """Save the most recent assessment when the user selects Save Plan."""
 
-        try:
-            plans = self.storage.load_data("saved_plans.json")
-            if not isinstance(plans, list):
-                plans = []
-            plans.append(self.last_result)
-            self.storage.save_data("saved_plans.json", plans)
+    if self.last_result is None:
+        self.view.show_error(
+            "There is no completed assessment to save yet."
+        )
+        return
+
+    try:
+        plans = self.storage.load_data("saved_plans.json")
+
+        if not isinstance(plans, list):
+            plans = []
+
+        plans.append(self.last_result)
+
+        saved = self.storage.save_data(
+            "saved_plans.json",
+            plans
+        )
+
+        if saved:
             self.view.set_status("Plan saved successfully.")
-        except Exception as error:
-            logger.exception("Could not save the current plan.")
-            self.view.show_error(f"The plan could not be saved: {error}")
+        else:
+            self.view.show_error(
+                "The plan could not be saved. Check the storage folder."
+            )
 
+    except Exception as error:
+        logger.exception("Could not save the current plan.")
+
+        self.view.show_error(
+            f"The plan could not be saved: {error}"
+      )
 
 def main() -> None:
     """Create the Tkinter window and start the event loop."""
