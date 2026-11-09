@@ -30,7 +30,7 @@ from services.recommendation_engine import RecommendationEngine
 from services.risk_analyzer import ActivityRiskAnalyzer
 from services.weather_client import WeatherClient
 from storage.json_storage import JSONStorage
-from utils.validators import validate_location
+from utils.validator import validate_location
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -80,7 +80,7 @@ class WeatherActivityPlannerApp:
         self.risk_analyzer = ActivityRiskAnalyzer()
         self.recommendation_engine = RecommendationEngine()
         self.ai_explainer = AIExplainer()
-        self.storage = JSONStorage()
+        self.storage = JSONStorage(DATA_DIR)
 
         self.last_result: dict[str, Any] | None = None
         self.is_busy = False
@@ -104,13 +104,14 @@ class WeatherActivityPlannerApp:
         location = (location or "").strip()
         activity = (activity or "").strip()
 
-        try:
+          try:
             if not location:
-                raise ValueError("Enter a location before requesting an assessment.")
+              raise ValueError("Enter a location before requesting an assessment.")
+
             if not activity:
-                raise ValueError("Select an outdoor activity first.")
-            if not validate_location(location):
-                raise ValueError("The location input is not valid. Check it and try again.")
+              raise ValueError("Select an outdoor activity first.")
+
+        location = validate_location(location)
         except (TypeError, ValueError) as error:
             self.view.show_error(str(error))
             return
