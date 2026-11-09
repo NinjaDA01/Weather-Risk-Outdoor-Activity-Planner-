@@ -132,10 +132,10 @@ class WeatherActivityPlannerApp:
             forecast = self.weather_client.get_weather(location)
             if forecast is None:
                 raise RuntimeError("The weather service returned no forecast.")
-                        if not isinstance(forecast, dict):
+            if not isinstance(forecast, dict):
                 raise TypeError(
                     "WeatherClient.get_weather() must return forecast data as a dictionary."
-)
+          )
 
             # 2. Apply deterministic, rule-based safety analysis.
             risk = self.risk_analyzer.assess_risk(forecast, activity)
