@@ -316,7 +316,21 @@ class RecommendationEngine:
         """
         name, profile = self._resolve_activity(activity)
         hours = self._normalise_forecast(forecast)
-        external = self._external_risk(forecast, risk_assessment)
+        
+        external_source = risk_assessment
+
+        if external_source is None and isinstance(forecast, dict):
+            external_source = (
+                forecast.get("risk")
+                or forecast.get("risk_assessment")
+            )
+
+        if external_source is None:
+            external_source = self.default_risk
+
+        external = self._risk_to_int(external_source)
+        has_external_assessment = external_source is not None
+
         window = [h for h in hours if self._in_window(h["hour"], profile)] or hours
 
         essentials = list(self._essentials(name))
@@ -324,8 +338,15 @@ class RecommendationEngine:
         safety: List[str] = list(self._safety(name))
 
         stats = self._weather_stats(window)
-        hour_risk = max((self._hour_risk(h, profile)[0] for h in window), default=0)
-        overall = max(hour_risk, external)
+
+        hour_risk = max(
+            (self._hour_risk(h, profile)[0] for h in window),
+            default=0
+        )
+
+        # Use the official risk analyzer's result when available.
+        # Otherwise, fall back to the recommendation engine's own assessment.
+        overall = external if has_external_assessment else hour_risk
 
         if stats["max_rain"] is not None and stats["max_rain"] >= 30:
             weather_gear += ["Umbrella or raincoat", "Waterproof bag or plastic cover for phone and documents"]
@@ -445,55 +466,132 @@ class RecommendationEngine:
     # Forecast normalisation
     # ------------------------------------------------------------------
 
+    
     def _normalise_forecast(self, forecast) -> List[Dict[str, Any]]:
         if forecast is None:
             return []
+
         entries = forecast
+
         if isinstance(forecast, dict):
-            if isinstance(forecast.get("time"), (list, tuple)):
-                entries = forecast  # the bare Open-Meteo "hourly" block
+            # Handle the format returned by our WeatherClient.
+            if isinstance(forecast.get("forecast_times"), list):
+                times = forecast.get("forecast_times", [])
+                temperatures = forecast.get("hourly_temperatures", [])
+                winds = forecast.get("hourly_wind_speeds", [])
+                humidity = forecast.get("hourly_humidity", [])
+                weather_codes = forecast.get("hourly_weather_codes", [])
+                rain_probability = forecast.get(
+                    "hourly_precipitation_probability", []
+                )
+
+                entries = []
+
+                for i, time_value in enumerate(times):
+                    entries.append({
+                        "time": time_value,
+                        "temperature_2m": (
+                            temperatures[i] if i < len(temperatures) else None
+                        ),
+                        "wind_speed_10m": (
+                            winds[i] if i < len(winds) else None
+                        ),
+                        "relative_humidity_2m": (
+                            humidity[i] if i < len(humidity) else None
+                        ),
+                        "weather_code": (
+                            weather_codes[i] if i < len(weather_codes) else None
+                        ),
+                        "precipitation_probability": (
+                            rain_probability[i]
+                            if i < len(rain_probability) else None
+                        ),
+                    })
+
+            elif isinstance(forecast.get("time"), (list, tuple)):
+                entries = self._columns_to_rows(forecast)
+
             else:
-                entries = (forecast.get("hourly") or forecast.get("hours")
-                           or forecast.get("forecast") or [])
+                entries = (
+                    forecast.get("hourly")
+                    or forecast.get("hours")
+                    or forecast.get("forecast")
+                    or []
+                )
+
         if isinstance(entries, dict):
             entries = self._columns_to_rows(entries)
+
         if not isinstance(entries, (list, tuple)):
-            raise TypeError("Forecast must be a list of hourly dicts or a dict with an 'hourly' list.")
+            raise TypeError(
+                "Forecast must be a list of hourly dictionaries "
+                "or a dictionary containing hourly forecast data."
+            )
 
         hours = []
+
         for i, e in enumerate(entries):
             if not isinstance(e, dict):
                 continue
-            t = self._first(e, "time", "datetime", "dt_txt", "hour", "timestamp")
+
+            t = self._first(
+                e, "time", "datetime", "dt_txt", "hour", "timestamp"
+            )
+
             rain = self._number(self._first(
-                e, "rain_probability", "pop", "precipitation_probability", "chance_of_rain",
-                "rain_chance", "precip_prob"))
-            if rain is not None and isinstance(rain, float) and 0 < rain <= 1:
-                rain *= 100  # fraction -> percent
-            cond = self._first(e, "condition", "description", "weather", "summary", "main",
-                               "weather_code", "weathercode")
+                e,
+                "rain_probability",
+                "pop",
+                "precipitation_probability",
+                "chance_of_rain",
+                "rain_chance",
+                "precip_prob"
+            ))
+
+            if rain is not None and 0 < rain <= 1:
+                rain *= 100
+
+            cond = self._first(
+                e, "condition", "description", "weather",
+                "summary", "main", "weather_code", "weathercode"
+            )
+
             if isinstance(cond, dict):
                 cond = cond.get("description") or cond.get("main")
+
             if isinstance(cond, (int, float)) and not isinstance(cond, bool):
                 cond = WMO_CODES.get(int(cond), "")
-            vis = self._number(self._first(e, "visibility", "visibility_km"))
+
+            vis = self._number(
+                self._first(e, "visibility", "visibility_km")
+            )
+
             if vis is not None and vis > 100:
-                vis /= 1000  # Open-Meteo gives visibility in metres
+                vis /= 1000
+
             hours.append({
                 "index": i,
                 "label": self._label(t, i),
                 "hour": self._parse_hour(t),
-                "temp": self._number(self._first(e, "temperature", "temp", "temp_c", "temperature_2m")),
+                "temp": self._number(self._first(
+                    e, "temperature", "temp", "temp_c", "temperature_2m"
+                )),
                 "humidity": self._number(self._first(
-                    e, "humidity", "humidity_percent", "relative_humidity_2m")),
+                    e, "humidity", "humidity_percent",
+                    "relative_humidity_2m"
+                )),
                 "wind": self._number(self._first(
-                    e, "wind_speed", "wind_kph", "wind", "wind_speed_10m")),
+                    e, "wind_speed", "wind_kph", "wind",
+                    "wind_speed_10m"
+                )),
                 "rain": rain,
                 "condition": str(cond).lower() if cond else "",
                 "uv": self._number(self._first(e, "uv_index", "uv")),
                 "visibility": vis,
             })
+
         return hours
+
 
     @staticmethod
     def _columns_to_rows(cols):
