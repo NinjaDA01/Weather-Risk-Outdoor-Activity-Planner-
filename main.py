@@ -153,6 +153,7 @@ class WeatherActivityPlannerApp:
             self.root,
             on_assess=self.assess_activity,
             on_save=self.save_latest_plan,
+            on_view_saved=self.view_saved_plans,
         )
 
         # Process background events on the main Tkinter thread.
@@ -560,6 +561,28 @@ class WeatherActivityPlannerApp:
                 f"The plan could not be saved: {error}"
             )
 
+    # ========================================================
+# VIEW SAVED ACTIVITY PLANS
+# ========================================================
+
+    def view_saved_plans(self) -> None:
+        """Load and display previously saved activity plans."""
+
+        try:
+            plans = self.storage.load_data("saved_plans.json")
+
+            if not isinstance(plans, list):
+                plans = []
+
+            self.view.show_saved_plans(plans)
+
+        except Exception as error:
+
+            logger.exception("Could not retrieve saved plans.")
+
+            self.view.show_error(
+                f"Could not load saved plans: {error}"
+            )
 
 # ============================================================
 # APPLICATION ENTRY POINT
