@@ -191,6 +191,7 @@ class WeatherClient:
                     "precipitation",
                     "weather_code",
                     "wind_speed_10m",
+                    "precipitation_probability"
                 ]
             ),
             "forecast_days": self.forecast_days,
@@ -298,6 +299,11 @@ class WeatherClient:
         hourly_weather_codes = self._optional_integer_series(
             hourly.get("weather_code"), len(times), "weather_code"
         )
+        hourly_rain_probability = self._optional_numeric_series(
+            hourly.get("precipitation_probability"),
+            len(times),
+            "precipitation_probability"
+        )
 
         current = payload.get("current")
         if not isinstance(current, Mapping):
@@ -331,6 +337,7 @@ class WeatherClient:
             "hourly_humidity": hourly_humidity,
             "hourly_feels_like": hourly_feels_like,
             "hourly_weather_codes": hourly_weather_codes,
+            "hourly_precipitation_probability": hourly_rain_probability,
             # Useful metadata for displaying local forecast times in the GUI.
             "timezone": payload.get("timezone") or coordinates.get("timezone"),
             "timezone_abbreviation": payload.get("timezone_abbreviation"),
