@@ -164,6 +164,59 @@ ACTIVITY_PROFILES: Dict[str, Dict[str, Any]] = {
             "Carry a bag to take all your rubbish home.",
         ],
     },
+    "walking": {
+        "temp_ideal": (16, 28),
+        "temp_hard": (5, 36),
+        "wind_ideal_max": 25,
+        "wind_hard_max": 45,
+        "rain_ideal_max": 20,
+        "humidity_ideal_max": 80,
+        "uv_ideal_max": 7,
+        "heat_risk_temp": 33,
+        "hours": (5, 20),
+        "rain_weight": 1.0,
+        "tips": [
+            "Wear comfortable shoes and walk on safe, well-lit paths.",
+            "Carry water, especially if it is warm.",
+            "Stay aware of traffic and keep your phone charged.",
+        ],
+    },
+    "hiking": {
+        "temp_ideal": (14, 26),
+        "temp_hard": (3, 33),
+        "wind_ideal_max": 25,
+        "wind_hard_max": 45,
+        "rain_ideal_max": 15,
+        "humidity_ideal_max": 80,
+        "uv_ideal_max": 7,
+        "heat_risk_temp": 31,
+        "hours": (5, 15),
+        "rain_weight": 1.2,
+        "visibility_min": 4,
+        "tips": [
+            "Start early so you finish well before dark.",
+            "Tell someone your route and expected return time.",
+            "Carry more water and food than you think you need.",
+        ],
+    },
+    "cycling": {
+        "temp_ideal": (15, 28),
+        "temp_hard": (5, 35),
+        "wind_ideal_max": 20,
+        "wind_hard_max": 38,
+        "rain_ideal_max": 15,
+        "humidity_ideal_max": 80,
+        "uv_ideal_max": 7,
+        "heat_risk_temp": 32,
+        "hours": (5, 19),
+        "rain_weight": 1.2,
+        "visibility_min": 4,
+        "tips": [
+            "Wear a helmet and check your brakes and tyres before you ride.",
+            "Use lights and bright clothing, and follow traffic rules.",
+            "Wet roads are slippery: brake early and avoid sharp turns.",
+        ],
+    },
 }
 
 ACTIVITY_ALIASES = {
@@ -174,6 +227,10 @@ ACTIVITY_ALIASES = {
     "travel": "travelling", "travelling": "travelling", "traveling": "travelling",
     "trip": "travelling", "journey": "travelling", "road trip": "travelling",
     "picnic": "picnic", "picnicking": "picnic",
+    "walk": "walking", "walking": "walking", "stroll": "walking", "strolling": "walking",
+    "hike": "hiking", "hiking": "hiking", "trek": "hiking", "trekking": "hiking",
+    "cycle": "cycling", "cycling": "cycling", "bike": "cycling", "biking": "cycling",
+    "bicycle": "cycling", "bicycling": "cycling",
 }
 
 SEVERE_KEYWORDS = ("thunder", "storm", "tornado", "hail", "lightning", "cyclone", "squall")
@@ -360,6 +417,10 @@ class RecommendationEngine:
                 weather_gear.append("Waterproof ground sheet and a canopy or tarp")
             if name == "travelling":
                 weather_gear.append("Windscreen wipers and tyres in good condition")
+            if name == "hiking":
+                weather_gear.append("Waterproof shoes with good grip")
+            if name == "cycling":
+                weather_gear.append("Waterproof jacket and mudguards")
         if stats["max_temp"] is not None and stats["max_temp"] >= 29:
             weather_gear += ["Extra water (at least 1-2 litres per person)", "Cap or wide-brim hat"]
             weather_gear.append("Light, breathable clothing")
@@ -378,6 +439,8 @@ class RecommendationEngine:
                 weather_gear.append("Weights or clips to hold down blankets and food covers")
             if name == "farming":
                 safety.append("Do not spray chemicals in strong wind.")
+            if name == "cycling":
+                safety.append("Strong wind and gusts can push a bike off course: ride with extra care.")
         if stats["max_humidity"] is not None and stats["max_humidity"] >= 85:
             weather_gear.append("Quick-dry clothing and a small towel")
         if stats["min_visibility"] is not None and stats["min_visibility"] < 5:
@@ -443,6 +506,9 @@ class RecommendationEngine:
             "farming": ["Hoe/cutlass or required tools", "Gloves", "Farm boots", "Water", "Snacks", "Hat", "First-aid kit"],
             "travelling": ["ID and travel documents", "Phone and power bank", "Cash and cards", "Water and snacks", "Small first-aid kit"],
             "picnic": ["Blanket or mat", "Food and drinks", "Cooler with ice packs", "Plates, cups and cutlery", "Refuse bags", "Hand sanitiser or wipes"],
+            "walking": ["Comfortable walking shoes", "Water bottle", "Phone with ID", "Light snack"],
+            "hiking": ["Sturdy hiking shoes or boots", "Backpack", "Plenty of water", "Snacks or trail food", "Map or offline directions", "Phone and power bank", "First-aid kit"],
+            "cycling": ["Bicycle in good condition", "Helmet", "Water bottle", "Puncture repair kit and pump", "Front and rear lights", "Phone with ID"],
         }[name]
 
     @staticmethod
@@ -453,6 +519,9 @@ class RecommendationEngine:
             "farming": ["Wear protective footwear to avoid cuts and snake bites."],
             "travelling": ["Check vehicle condition and fuel before leaving."],
             "picnic": ["Keep food covered and perishables cold."],
+            "walking": ["Use pavements or safe paths and stay visible near roads."],
+            "hiking": ["Stay on marked paths and turn back early if the weather worsens."],
+            "cycling": ["Wear a helmet and follow traffic rules."],
         }[name]
 
     @staticmethod
